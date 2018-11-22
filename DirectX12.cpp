@@ -33,10 +33,12 @@ static TDescriptorHeap GNonShaderVisibleHeap;
 static TGpuMemoryHeap GUploadMemoryHeaps[2];
 
 static IDXGISwapChain3* GSwapChain;
+static ID3D12Resource* GSwapBuffers[4];
 static ID3D12Fence* GFrameFence;
 static HANDLE GFrameFenceEvent;
 
 static uint64_t GFrameCount;
+static unsigned GBackBufferIndex;
 
 
 static TDescriptorHeap&
@@ -102,16 +104,18 @@ CopyDescriptorsToGpu(unsigned Count, D3D12_CPU_DESCRIPTOR_HANDLE Source)
     D3D12_CPU_DESCRIPTOR_HANDLE DestinationCpu;
     D3D12_GPU_DESCRIPTOR_HANDLE DestinationGpu;
     AllocateGpuDescriptors(Count, DestinationCpu, DestinationGpu);
+
     GDevice->CopyDescriptorsSimple(Count, DestinationCpu, Source, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     return DestinationGpu;
 }
 
-static inline D3D12_CPU_DESCRIPTOR_HANDLE
-GetBackBufferRtv()
+static inline void
+GetBackBuffer(ID3D12Resource*& OutResource, D3D12_CPU_DESCRIPTOR_HANDLE& OutHandle)
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE BackBufferRtv = Priv::GRenderTargetHeap.CpuStart;
-    BackBufferRtv.ptr += GBackBufferIndex * GDescriptorSizeRtv;
-    return BackBufferRtv;
+    OutResource = Priv::GSwapBuffers[Priv::GBackBufferIndex];
+
+    OutHandle = Priv::GRenderTargetHeap.CpuStart;
+    OutHandle.ptr += Priv::GBackBufferIndex * GDescriptorSizeRtv;
 }
 
 static inline void
@@ -297,9 +301,9 @@ Initialize(HWND Window)
 
         for (unsigned Index = 0; Index < 4; ++Index)
         {
-            VHR(Priv::GSwapChain->GetBuffer(Index, IID_PPV_ARGS(&GSwapBuffers[Index])));
+            VHR(Priv::GSwapChain->GetBuffer(Index, IID_PPV_ARGS(&Priv::GSwapBuffers[Index])));
 
-            GDevice->CreateRenderTargetView(GSwapBuffers[Index], nullptr, Handle);
+            GDevice->CreateRenderTargetView(Priv::GSwapBuffers[Index], nullptr, Handle);
             Handle.ptr += GDescriptorSizeRtv;
         }
     }
@@ -312,14 +316,14 @@ Initialize(HWND Window)
                                              &ImageDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
                                              &CD3DX12_CLEAR_VALUE(DXGI_FORMAT_D32_FLOAT, 1.0f, 0),
                                              IID_PPV_ARGS(&GDepthBuffer)));
-        D3D12_CPU_DESCRIPTOR_HANDLE Handle;
-        AllocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, Handle);
+
+        AllocateDescriptors(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, GDepthBufferHandle);
 
         D3D12_DEPTH_STENCIL_VIEW_DESC ViewDesc = {};
         ViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
         ViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
         ViewDesc.Flags = D3D12_DSV_FLAG_NONE;
-        GDevice->CreateDepthStencilView(GDepthBuffer, &ViewDesc, Handle);
+        GDevice->CreateDepthStencilView(GDepthBuffer, &ViewDesc, GDepthBufferHandle);
     }
 
     VHR(GDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GCmdAlloc[0], nullptr, IID_PPV_ARGS(&GCmdList)));
@@ -338,7 +342,7 @@ Shutdown()
     SAFE_RELEASE(Priv::GRenderTargetHeap.Heap);
     SAFE_RELEASE(Priv::GDepthStencilHeap.Heap);
     for (unsigned Index = 0; Index < 4; ++Index)
-        SAFE_RELEASE(GSwapBuffers[Index]);
+        SAFE_RELEASE(Priv::GSwapBuffers[Index]);
     CloseHandle(Priv::GFrameFenceEvent);
     SAFE_RELEASE(Priv::GFrameFence);
     SAFE_RELEASE(Priv::GSwapChain);
@@ -361,7 +365,7 @@ PresentFrame()
     }
 
     GFrameIndex = !GFrameIndex;
-    GBackBufferIndex = Priv::GSwapChain->GetCurrentBackBufferIndex();
+    Priv::GBackBufferIndex = Priv::GSwapChain->GetCurrentBackBufferIndex();
 
     Priv::GShaderVisibleHeaps[GFrameIndex].Size = 0;
     Priv::GUploadMemoryHeaps[GFrameIndex].Size = 0;

@@ -2,7 +2,7 @@
 setlocal
 setlocal enableextensions
 
-set NAME=SimplePbr
+set NAME=Demo
 if "%1" == "clean" if exist External.pch del External.pch
 
 set FINAL=/O2 /DNDEBUG /MT
@@ -11,6 +11,8 @@ set DEBUG=/Zi /Od /D_DEBUG /MTd
 set DEBUGNOPDB=/Od /D_DEBUG /MTd
 set LFLAGS=/incremental:no /opt:ref /machine:x64
 set HLSLC=fxc.exe /Ges /O3 /WX /nologo /Qstrip_reflect /Qstrip_debug /Qstrip_priv
+
+set CONFIG=%DEBUG%
 
 if not defined CONFIG set CONFIG=%DEBUGNOPDB%
 ::/d2cgsummary
@@ -30,9 +32,9 @@ if exist %NAME%.exe del %NAME%.exe
 %HLSLC% /D PS_SAND /E PixelMain /Fo %CSODIR%\Sand.ps.cso /T ps_5_1 %NAME%.hlsl & if ERRORLEVEL 1 (set ERROR=1 & goto :end)
 
 if not exist External.pch (cl %CFLAGS% /c /YcExternal.h External.cpp)
-cl %CFLAGS% /YuExternal.h Main.cpp /link %LFLAGS% External.obj kernel32.lib user32.lib gdi32.lib /out:%NAME%.exe
+cl %CFLAGS% /YuExternal.h %NAME%.cpp /link %LFLAGS% External.obj kernel32.lib user32.lib gdi32.lib
 if ERRORLEVEL 1 (set ERROR=1)
-if exist Main.obj del Main.obj
+if exist %NAME%.obj del %NAME%.obj
 if "%1" == "run" if exist %NAME%.exe %NAME%.exe
 
 :end

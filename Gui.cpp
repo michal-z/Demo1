@@ -27,9 +27,34 @@ static D3D12_CPU_DESCRIPTOR_HANDLE GFontTextureDescriptor;
 static void
 Initialize()
 {
+    ImGuiIO& Io = ImGui::GetIO();
+    Io.KeyMap[ImGuiKey_Tab] = VK_TAB;
+    Io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+    Io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+    Io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+    Io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
+    Io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
+    Io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
+    Io.KeyMap[ImGuiKey_Home] = VK_HOME;
+    Io.KeyMap[ImGuiKey_End] = VK_END;
+    Io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+    Io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+    Io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+    Io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+    Io.KeyMap[ImGuiKey_A] = 'A';
+    Io.KeyMap[ImGuiKey_C] = 'C';
+    Io.KeyMap[ImGuiKey_V] = 'V';
+    Io.KeyMap[ImGuiKey_X] = 'X';
+    Io.KeyMap[ImGuiKey_Y] = 'Y';
+    Io.KeyMap[ImGuiKey_Z] = 'Z';
+    Io.ImeWindowHandle = Dx::GWindow;
+    Io.RenderDrawListsFn = nullptr;
+    Io.DisplaySize = ImVec2((float)Dx::GResolution[0], (float)Dx::GResolution[1]);
+    ImGui::GetStyle().WindowRounding = 0.0f;
+
     uint8_t* Pixels;
     int Width, Height;
-    ImGui::GetIO().Fonts->AddFontFromFileTTF("data/Roboto-Medium.ttf", 18.0f);
+    ImGui::GetIO().Fonts->AddFontFromFileTTF("Data/Roboto-Medium.ttf", 18.0f);
     ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height);
 
     const auto TextureDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, (UINT64)Width, Height);
@@ -73,8 +98,8 @@ Initialize()
         { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 16, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
-    eastl::vector<uint8_t> CsoVs = Misc::LoadFile("Data/Shaders/Gui.vs.cso");
-    eastl::vector<uint8_t> CsoPs = Misc::LoadFile("Data/Shaders/Gui.ps.cso");
+    eastl::vector<uint8_t> CsoVs = Lib::LoadFile("Data/Shaders/Gui.vs.cso");
+    eastl::vector<uint8_t> CsoPs = Lib::LoadFile("Data/Shaders/Gui.ps.cso");
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
     PsoDesc.InputLayout = { InputElements, (unsigned)eastl::size(InputElements) };
@@ -98,6 +123,22 @@ Initialize()
 
     VHR(Dx::GDevice->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&Priv::GPipelineState)));
     VHR(Dx::GDevice->CreateRootSignature(0, CsoVs.data(), CsoVs.size(), IID_PPV_ARGS(&Priv::GRootSignature)));
+}
+
+static void
+Shutdown()
+{
+    // @Incomplete: Release all resources.
+}
+
+static void
+Update(float DeltaTime)
+{
+    ImGuiIO& Io = ImGui::GetIO();
+    Io.KeyCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+    Io.KeyShift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    Io.KeyAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+    Io.DeltaTime = DeltaTime;
 }
 
 static void
@@ -216,12 +257,6 @@ Render()
         }
         VertexOffset += DrawList->VtxBuffer.size();
     }
-}
-
-static void
-Shutdown()
-{
-    // @Incomplete: Release all resources.
 }
 
 } // namespace Gui
