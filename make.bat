@@ -5,10 +5,10 @@ setlocal enableextensions
 set NAME=Demo
 if "%1" == "clean" if exist External.pch del External.pch
 
-set FINAL=/O2 /DNDEBUG /MT
-set RELEASE=/Zi /O2 /DNDEBUG /MT
-set DEBUG=/Zi /Od /D_DEBUG /MTd
-set DEBUGNOPDB=/Od /D_DEBUG /MTd
+set FINAL=/O2 /DNDEBUG /MD
+set RELEASE=/Zi /O2 /DNDEBUG /MD
+set DEBUG=/Zi /Od /D_DEBUG /MDd
+set DEBUGNOPDB=/Od /D_DEBUG /MDd
 set LFLAGS=/incremental:no /opt:ref /machine:x64
 set HLSLC=dxc.exe /Ges /O3 /WX /nologo
 
