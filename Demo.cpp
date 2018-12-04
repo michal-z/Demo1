@@ -18,7 +18,7 @@ static void
 BeginFrame()
 {
     ID3D12CommandAllocator* CmdAlloc = Dx::GCmdAlloc[Dx::GFrameIndex];
-    ID3D12GraphicsCommandList* CmdList = Dx::GCmdList;
+    Dx::TGraphicsCommandList* CmdList = Dx::GCmdList;
 
     CmdAlloc->Reset();
     CmdList->Reset(CmdAlloc, nullptr);

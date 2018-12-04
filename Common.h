@@ -1,10 +1,13 @@
 namespace Dx
 {
 
-static ID3D12Device* GDevice;
+typedef ID3D12Device3 TDevice;
+typedef ID3D12GraphicsCommandList2 TGraphicsCommandList;
+
+static TDevice* GDevice;
 static ID3D12CommandQueue* GCmdQueue;
 static ID3D12CommandAllocator* GCmdAlloc[2];
-static ID3D12GraphicsCommandList* GCmdList;
+static TGraphicsCommandList* GCmdList;
 static ID3D12Resource* GDepthBuffer;
 static D3D12_CPU_DESCRIPTOR_HANDLE GDepthBufferHandle;
 static HWND GWindow;
