@@ -15,7 +15,7 @@ set PXVER=
 
 if not defined CONFIG set CONFIG=%DEBUG%
 ::/d2cgsummary
-set CFLAGS=%CONFIG% /EHa- /GR- /Gy /Gw /W3 /nologo /I"External" /I"External/PhysX" /Bt
+set CFLAGS=%CONFIG% /EHa- /GR- /Gy /Gw /W3 /nologo /I"External" /I"External\PhysX" /Bt
 
 set ERROR=0
 
