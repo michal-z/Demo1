@@ -3,3 +3,4 @@ imgui 1.64
 stb_perlin 0.3
 stb_image 2.19
 EASTL 3.12.01
+PhysX 3.4 (December 2018)
